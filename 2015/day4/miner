@@ -1,0 +1,39 @@
+#!/bin/bash
+
+KEY=$1
+BATCH_SIZE=10000
+MAX_SEARCH=$((10000000))
+if [[ -z "$KEY" ]]; then
+	echo "Usage: $0 KEY"
+fi
+
+mine_batch() {
+	local start=$1
+	local end=$((start + BATCH_SIZE))
+
+	for ((i=start; i<end; i++)); do
+		hash=$(printf "%s%05d" $KEY $i | md5sum)
+
+		if [[ "${hash:0:5}" == "00000" ]]; then
+			echo "$i"
+			return 0
+		fi
+	done
+	
+	echo "Failed from $start to $end" >&2
+	return 1
+}
+
+export -f mine_batch
+export KEY
+export BATCH_SIZE
+
+result=$(seq 0 $BATCH_SIZE $MAX_SEARCH | parallel --halt now,success=1 --line-buffer -j $(nproc) mine_batch)
+
+if [[ -n "$result" ]]; then
+	echo "Solution: $result"
+	hash=$(printf "%s%05d" $KEY $result | md5sum)
+	echo "Hash: $hash"
+else
+	echo "No solution found in range 0-$MAX_SEARCH"
+fi

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+string="$1"
+if [[ -z "$string" ]]; then
+	echo "Usage: $0 STRING"
+	exit 1
+fi
+
+floor=0
+for ((i=0; i<${#string}; i++)); do
+	char="${string:i:1}"
+	if [[ "$char" == "(" ]]; then
+		((floor+=1))
+	elif [[ "$char" == ")" ]]; then
+		((floor-=1))
+	else
+		echo "Invalid token found at index $i"
+		exit 1
+	fi
+done
+
+echo "Santa is on floor $floor"

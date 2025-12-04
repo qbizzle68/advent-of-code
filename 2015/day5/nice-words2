@@ -1,0 +1,30 @@
+#!/bin/bash
+
+mapfile -t words
+
+valid_word_count=0
+for word in "${words[@]}"; do
+	has_double=false
+	has_skip=false
+	word_length=${#word}
+	for ((i=0; i<$((word_length-1)); i++)); do
+		pair="${word:i:2}"
+		for ((j=i+2; j<$((word_length-1));j++));do
+			if [[ "$pair" == "${word:j:2}" ]]; then
+				has_double=true
+			fi
+		done
+	done
+	for ((i=0; i<$((word_length-2)); i++)); do
+		char="${word:i:1}"
+		if [[ "$char" == "${word:i+2:1}" ]]; then
+			has_skip=true
+		fi
+	done
+
+	if [[ "$has_double" == "true" ]] && [[ "$has_skip" == "true" ]]; then
+		((valid_word_count++))
+	fi
+done
+
+echo "Found $valid_word_count valid word(s)."

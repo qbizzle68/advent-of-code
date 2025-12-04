@@ -1,0 +1,50 @@
+#!/bin/bash
+
+declare -A present_count
+x_santa=0
+y_santa=0
+x_robo=0
+y_robo=0
+santas_move=true
+present_count["0;0"]=2
+
+IFS='' read -r map_string
+
+for ((i = 0; i < ${#map_string}; i++)); do
+	case "${map_string:i:1}" in
+		"^")
+			tmp_y=1
+			tmp_x=0
+			;;
+		">")
+			tmp_y=0
+			tmp_x=1
+			;;
+		"v")
+			tmp_y=-1
+			tmp_x=0
+			;;
+		"<")
+			tmp_y=0
+			tmp_x=-1
+			;;
+		*)
+			echo "Invalid token ${map_string:i:1}"
+			exit 1
+			;;
+	esac
+	if [[ "$santas_move" == "true" ]]; then
+		((x_santa+=tmp_x))
+		((y_santa+=tmp_y))
+		((present_count["$x_santa;$y_santa"]+=1))
+		santas_move=false
+	else
+		((x_robo+=tmp_x))
+		((y_robo+=tmp_y))
+		((present_count["$x_robo;$y_robo"]+=1))
+		santas_move=true
+	fi
+done
+
+echo "Both Santas visited ${#present_count[@]} houses."
+

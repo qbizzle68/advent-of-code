@@ -1,0 +1,33 @@
+#!/bin/bash
+
+declare -A present_count
+x=0
+y=0
+present_count["0;0"]=1
+
+IFS='' read -r map_string
+
+for ((i = 0; i < ${#map_string}; i++)); do
+	case "${map_string:i:1}" in
+		"^")
+			((y+=1))
+			;;
+		">")
+			((x+=1))
+			;;
+		"v")
+			((y-=1))
+			;;
+		"<")
+			((x-=1))
+			;;
+		*)
+			echo "Invalid token ${map_string:i:1}"
+			exit 1
+			;;
+	esac
+	((present_count["$x;$y"]+=1))
+done
+
+echo "Santa visited ${#present_count[@]} houses."
+

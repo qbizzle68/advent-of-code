@@ -1,0 +1,31 @@
+#!/bin/bash
+
+mapfile -t banks
+
+max_joltages=()
+for bank in "${banks[@]}"; do
+	first_max="${bank:0:1}"
+	second_max="${bank:1:1}"
+
+	for ((i=2; i<${#bank}; i++)); do
+		current_max="$first_max$second_max"
+		char="${bank:i:1}"
+
+		number1="$first_max$char"
+		number2="$second_max$char"
+		new_number_max=$(( number1 < number2 ? number2 : number1 ))
+
+		if [[ "$current_max" -lt "$new_number_max" ]]; then
+			first_max="${new_number_max:0:1}"
+			second_max="${new_number_max:1:1}"
+		fi
+	done
+	max_joltages+=("$first_max$second_max")
+done
+
+sum=0
+for joltage in "${max_joltages[@]}"; do
+	((sum+=joltage))
+done
+
+echo "Total output joltage is $sum"

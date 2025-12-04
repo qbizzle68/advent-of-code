@@ -1,0 +1,46 @@
+#!/bin/bash
+
+mapfile -t banks
+
+max_joltages=()
+for bank in "${banks[@]}"; do
+	max_value="$bank"
+
+	# Compare 2 digits at a time (starting from left). If the numbers are ascending (lhs<rhs)
+	# then remove the left digit. Do this over entire string and if string length > 12 simply
+	# truncate the rightmost digits by taking leftmost 12 as result.
+
+	pointer=0
+	# While the pointer hasn't reached the last digit or we've shortened max_value to a length of 12
+	while [[ "$pointer" -lt "$((${#max_value} - 1))" ]] && [[ "${#max_value}" -gt 12 ]]; do
+		first_value="${max_value:$pointer:1}"
+		second_value="${max_value:$pointer+1:1}"
+
+		if [[ "$first_value" -lt "$second_value" ]]; then
+			# We have ascending values, remove first_value from max_value string
+			max_value="${max_value:0:$pointer}${max_value:$pointer+1}"
+
+			# Back the pointer up one value to ensure preceeding digit and it's new
+			# rhs neighbor are not also ascending.
+			pointer=$(( pointer-1 <= 0 ? 0 : pointer-1 ))
+		else
+			((pointer++))
+		fi
+	done
+
+	# When all values are in ascending order the string may be longer than 12
+	# digits. The leftmost 12 will make the largest 12 digit number.
+	if [[ "${#max_value}" -gt 12 ]]; then
+		max_value="${max_value:0:12}"
+	fi
+
+	max_joltages+=($max_value)
+
+done
+
+sum=0
+for joltage in "${max_joltages[@]}"; do
+	((sum+=joltage))
+done
+
+echo "Total output joltage is $sum"

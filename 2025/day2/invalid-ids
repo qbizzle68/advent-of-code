@@ -1,0 +1,27 @@
+#!/bin/bash
+
+IFS=',' read -ra ranges <<< "$(cat)"
+
+invalid_values=()
+for range in "${ranges[@]}"; do
+	start="${range%-*}"
+	end="${range#*-}"
+
+	for ((i=start; i<=end; i++)); do
+		if [[ $(("${#i}" % 2)) == 1 ]]; then
+			continue
+		fi
+
+		half_length=$(( "${#i}" / 2))
+		if [[ "${i:0:half_length}" == "${i:half_length}" ]]; then
+			invalid_values+=($i)
+		fi
+	done
+done
+
+sum=0
+for val in "${invalid_values[@]}"; do
+	((sum+=val))
+done
+
+echo "Invalid ID sum = $sum"

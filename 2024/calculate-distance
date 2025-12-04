@@ -1,0 +1,23 @@
+#!/bin/bash
+
+lhs=()
+rhs=()
+while read -r num1 num2; do
+	lhs+=("$num1")
+	rhs+=("$num2")
+done
+
+mapfile -t leftsorted < <(printf '%d\n' "${lhs[@]}" | sort -n)
+mapfile -t rightsorted < <(printf '%d\n' "${rhs[@]}" | sort -n)
+
+sum=0
+for ((i=0; i<${#leftsorted[@]}; i++)); do
+	difference=$(( rightsorted[i] - leftsorted[i] ))
+	# Remove a leading '-' for when difference < 0 (bash abs())
+	distance=${difference#-}
+	sum=$((sum + distance))
+done
+
+echo "Sorted left: ${leftsorted[*]}"
+echo "Sorted right: ${rightsorted[*]}"
+echo "Sum is $sum"

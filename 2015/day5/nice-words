@@ -1,0 +1,41 @@
+#!/bin/bash
+
+mapfile -t words
+
+valid_word_count=0
+for word in "${words[@]}"; do
+	vowel_count=0
+	has_double=false
+	includes_disallowed=false
+	for ((i=0; i<$((${#word}-1)); i++)); do
+		char="${word:i:1}"
+		next_char="${word:i+1:1}"
+		
+		if [[ "$char" =~ [aeiou] ]]; then
+			((vowel_count++))
+		fi
+
+		if [[ "$char" == "$next_char" ]]; then
+			has_double=true
+		fi
+
+		case "$char$next_char" in
+			"ab");&
+			"cd");&
+			"pq");&
+			"xy")
+				includes_disallowed=true
+				;;
+		esac
+	done
+	# Need to check last letter for a vowel
+	if [[ "${word: -1}" =~ [aeiou] ]]; then
+		((vowel_count++))
+	fi
+
+	if [[ "$vowel_count" -ge "3" ]] && [[ "$has_double" == "true" ]] && [[ "$includes_disallowed" == "false" ]]; then
+		((valid_word_count++))
+	fi
+done
+
+echo "Found $valid_word_count valid word(s)."

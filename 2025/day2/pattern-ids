@@ -1,0 +1,52 @@
+#!/bin/bash
+
+IFS=',' read -ra ranges <<< "$(cat)"
+
+repeating_pattern(){
+	value=$1
+
+	# We only need to check for repeating patterns of length 1/2 the overall
+	# length (they won't fit more than once otherwise.
+	length="${#value}"
+	half_length=$((length / 2))
+	local i
+	for ((i=1; i<=half_length; i++)); do
+		# if overall string length is not a multiple of i, a pattern of length i can repeat inside it
+		if [[ $((length % i)) -ne 0 ]]; then
+			continue
+		fi
+
+		str=""
+		for ((j=0; j<(length/i); j++)); do
+			str+="${value:0:i}"
+		done
+#		echo "comparison string is $str"
+
+		if [[ "$value" == "$str" ]]; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+invalid_values=()
+for range in "${ranges[@]}"; do
+	start="${range%-*}"
+	end="${range#*-}"
+
+	for ((i=start; i<=end; i++)); do
+#		echo "searching on $i"
+		if repeating_pattern $i; then
+			invalid_values+=($i)
+		fi
+	done
+	echo "Finished checking range $start-$end"
+done
+
+sum=0
+for val in "${invalid_values[@]}"; do
+	((sum+=val))
+done
+
+echo "Invalid ID sum = $sum"

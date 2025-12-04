@@ -1,0 +1,39 @@
+#!/bin/bash
+
+mapfile -t lines
+
+declare -A values
+for line in "${lines[@]}"; do
+	identifier="[a-z]+"
+	binary_op="^($identifier) (AND|OR) ($identifier) -> ($identifier)$"
+	shift_op="^($identifier) (LSHIFT|RSHIFT) ([0-9]+) -> ($identifier)$"
+	unary_not="^NOT ($identifier) -> ($identifier)$"
+	unary_set="^([0-9]+) -> ($identifier)$"
+
+	if [[ "$line" =~ $binary_op ]]; then
+		lhs_key="${BASH_REMATCH[1]}"
+		rhs_key="${BASH_REMATCH[3]}"
+		if [[ "${BASH_REMATCH[2]}" == "AND" ]]; then
+			values[${BASH_REMATCH[4]}]=$(( ${values[$lhs_key]} & ${values[$rhs_key]} ))
+		else
+			values[${BASH_REMATCH[4]}]=$(( ${values[$lhs_key]} | ${values[$rhs_key]} ))
+		fi
+	elif [[ "$line" =~ $shift_op ]]; then
+		operand_key="${BASH_REMATCH[1]}"
+		if [[ "${BASH_REMATCH[2]}" == "LSHIFT" ]]; then
+			values[${BASH_REMATCH[4]}]=$(( ${values[$operand_key]} << ${BASH_REMATCH[3]} ))
+		else
+			values[${BASH_REMATCH[4]}]=$(( ${values[$operand_key]} >> ${BASH_REMATCH[3]} ))
+		fi
+	elif [[ "$line" =~ $unary_not ]]; then
+		operand_key="${BASH_REMATCH[1]}"
+		# We need to sign extend bitwise not result since we're using unsigned 16 bit integers
+		values[${BASH_REMATCH[2]}]=$(( ~${values[$operand_key]} & 0xFFFF ))
+	elif [[ "$line" =~ $unary_set ]]; then
+		values[${BASH_REMATCH[2]}]="${BASH_REMATCH[1]}"
+	else
+		echo "No match for $line"
+	fi
+done
+
+echo "The circuit value for wire a is ${values[a]}"

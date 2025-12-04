@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Use stdin to get values
+
+find_area() {
+	l=$1
+	w=$2
+	h=$3
+
+	local area1=$((l * w))
+	local area2=$((w * h))
+	local area3=$((h * l))
+
+	local min_area=$(( area1 < area2 ? area1 : area2 ))
+	local min_area=$(( min_area < area3 ? min_area : area3 ))
+
+	local box_area=$(( 2 * area1 + 2 * area2 + 2 * area3 + min_area ))
+	echo $box_area
+}
+
+total_area=0
+while read -r line; do
+	IFS='x' read -r l w h <<< "$line"
+	current_area=$(find_area $l $w $h)
+	((total_area+=current_area))
+done
+
+echo "Total area = $total_area"
