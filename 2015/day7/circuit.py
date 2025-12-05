@@ -72,26 +72,34 @@ def parse_input(data: str) -> dict[Instruction]:
 
 def process(instructions: dict[str, Instruction], wire_values: dict[str, int]):
     stack = InstructionStack()
-    while len(instructions) > 0:
+    # We're making the assumption that wire_values all only get set once (I'm pretty sure this is true from
+    # the instructions). So when the number of values in wire_values is equal to the number of values that
+    # get set in instructions we're done.
+    total_instruction_count = len(set(i.sets for i in instructions.values()))
+    print(f'total_instruction_count = {total_instruction_count}')
+#    while len(instructions) > 0:
+    while len(wire_values) < total_instruction_count:
+        print(f'length of wire_values = {len(wire_values)}')
+        print(f'wire values = {wire_values}')
         next_instruction = stack.peek()
-        print(next_instruction)
-#        print(stack.stack[-10:])
         if next_instruction is None:
-            next_instruction = next(iter(instructions.values()))
+            for variable, instruction in instructions.items():
+                if wire_values.get(variable) is None:
+                    next_instruction = instruction
+                    break
+#            next_instruction = next(iter(instructions.values()))
             stack.push(next_instruction)
+        print(f'next instruction = {next_instruction}')
 
         # If the operands are None in wire_values, push them onto the stack
         variable_names = [v for v in next_instruction.variables[:-1] if not v.isnumeric()]
         values = [wire_values.get(v) for v in variable_names]
         if not all(values):
             for val, var in zip(values, variable_names):
-            #       print('pushing', var, 'instruction')
                 if val is None and var not in stack:
                     stack.push(instructions[var])
         else:
             # We have all data necessary to execute the next instruction!
-#            if next_instruction.command == 'SET':
-#                wire_values[next_instruction.sets] = next_instruction.value
             if next_instruction.command == 'SET':
                 if next_instruction.value is None:
                     wire_values[next_instruction.sets] = wire_values[next_instruction.variables[0]]
@@ -123,12 +131,9 @@ def process(instructions: dict[str, Instruction], wire_values: dict[str, int]):
                 wire_values[next_instruction.sets] = ~v & 0xffff
             else:
                 raise Exception(f'Invalid command {next_instruction.command} found')
-            tmp = stack.stack.pop()
-            if tmp is None:
-                print("stack pop was None")
-            if next_instruction.sets == 'b':
-                print('from process b =', next_instruction, instructions['b'])
-            instructions.pop(next_instruction.sets)
+            print(f'popping stack')
+            print(stack.stack.pop())
+#            instructions.pop(next_instruction.sets)
 
 
 if __name__ == '__main__':
@@ -137,12 +142,6 @@ if __name__ == '__main__':
         data = f.read()
 
     instructions = parse_input(data)
-#    print(a:=list(instructions.keys()))
-#    print(b:=list(i.sets for i in instructions.values()))
-#    print(a==b)
-#    print(instructions.get('b'))
-#    print(len(instructions))
-    print("From main, 'b' =", instructions['b'])
 
     wire_values = {}
     process(instructions, wire_values)
