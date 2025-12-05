@@ -1,0 +1,22 @@
+#!/bin/bash
+
+mapfile -t lines
+
+total_chars=0
+total_bytes=0
+for line in "${lines[@]}"; do
+	reduced_line=$(echo "$line" |
+		sed 's/\\\\/./g' |	# Start by replacing double \\ so the second \ doesn't trigger wrong sequence.
+		sed 's/\\"/./g' |	# Remove \" before lone " since the \" will be corrupted otherwise
+		sed 's/\"//g' | 
+		sed -E 's/\\x[a-fA-F0-9]{2}/./g')
+
+	new_chars="${#line}"
+	# For some reason there's an additional byte (even with -n on echo)
+	new_bytes=$(( $(echo $reduced_line | wc -c) - 1 ))
+
+	((total_chars+=new_chars))
+	((total_bytes+=new_bytes))
+done
+
+echo "Difference between bytes and characters is $((total_chars - total_bytes))"

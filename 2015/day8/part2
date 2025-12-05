@@ -1,0 +1,18 @@
+#!/bin/bash
+
+mapfile -t lines
+
+total_old_chars=0
+total_new_chars=0
+accum=0
+for line in "${lines[@]}"; do
+	quote_count=$(echo "${line}" | grep -Po '\\\"(?=[^$])' | wc -l)
+	slash_count=$(echo "${line}" | grep -o '\\\\' | wc -l)
+	hex_count=$(echo "${line}" | grep -Eo '\\x[a-f0-9]{2}' | wc -l)
+
+	diff=$(( (quote_count + slash_count) * 2 + hex_count + 4 ))
+
+	(( accum += diff ))
+done
+
+echo "Number of added characters is $accum"
