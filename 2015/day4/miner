@@ -1,34 +1,33 @@
 #!/bin/bash
 
-KEY=$1
-BATCH_SIZE=10000
-MAX_SEARCH=$((10000000))
-if [[ -z "$KEY" ]]; then
-	echo "Usage: $0 KEY"
+KEY="$1"
+ZEROS="$2"
+BATCH_SIZE="$3"
+MAX_SEARCH="$4"
+#BATCH_SIZE=10000
+#MAX_SEARCH=$((10000000))
+if [[ -z "$KEY" ]] || [[ -z "$ZEROS" ]]; then
+	echo "Usage: $0 KEY ZEROS [BATCHSIZE [MAX_SEARCH]]"
+fi
+if [[ -z "$BATCH_SIZE" ]]; then
+	BATCH_SIZE=10000
+fi
+if [[ -z "$MAX_SEARCH" ]]; then
+	# No idea if this is perfect but it works well for ZEROS = 5, 6 I think.
+	MAX_SEARCH=$(( 10 ** (ZEROS + 1) ))
 fi
 
-mine_batch() {
-	local start=$1
-	local end=$((start + BATCH_SIZE))
 
-	for ((i=start; i<end; i++)); do
-		hash=$(printf "%s%05d" $KEY $i | md5sum)
+# IMPORTANT !!!!!!!!!!!!!!!
+# Since this parallelizes it could be possible that one process finds a value first,
+# terminating the other processes, and another process searching smaller values would
+# have succeeded, giving us a wrong answer. With smallish batch sizes this is much
+# less likely, but it is possible.
 
-		if [[ "${hash:0:5}" == "00000" ]]; then
-			echo "$i"
-			return 0
-		fi
-	done
-	
-	echo "Failed from $start to $end" >&2
-	return 1
-}
-
-export -f mine_batch
-export KEY
-export BATCH_SIZE
-
-result=$(seq 0 $BATCH_SIZE $MAX_SEARCH | parallel --halt now,success=1 --line-buffer -j $(nproc) mine_batch)
+# Parallelize fastmine (signature is ./fastmine START BATCHSIZE KEY [ZEROS])
+result=$(seq 0 $BATCH_SIZE $MAX_SEARCH |
+	parallel --halt now,success=1 --line-buffer -j $(nproc) \
+	"./fastmine {} $BATCH_SIZE $KEY $ZEROS")
 
 if [[ -n "$result" ]]; then
 	echo "Solution: $result"
