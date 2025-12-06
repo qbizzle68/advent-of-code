@@ -1,0 +1,55 @@
+#!/bin/bash
+
+input="$1"
+steps="$2"
+if [[ -z "$input" ]] || [[ -z "$steps" ]]; then
+	echo "Usage: $0 INPUT STEPS"
+	exit 1
+fi
+
+# Loop through steps updating a pair of arrays with the counts, then rebuild that number
+result="$input"
+for ((i=0; i<$steps; i++)); do
+	preceeding_val=""
+	salt="0"
+	unset counts
+	declare -A counts
+	map=()
+
+	for ((j=0; j<${#result}; j++)); do
+#		echo "starting loop with j = $j"
+#		echo "counts key are"
+#		echo "${!counts[@]}"
+#		echo "counts value are"
+#		echo "${counts[@]}"
+		char="${result:j:1}"
+		if [[ "$char" != "$preceeding_val" ]]; then
+			(( salt++ ))
+			map+=("$salt:$char")
+		fi
+
+		# map will have list of keys in order, everything after the : is the char
+		# and value in array is the quantity, 'salt' keeps keys unique
+		key="$salt:$char"
+		(( counts[$key]++ ))
+		preceeding_val="$char"
+#		echo "ending loop"
+#		echo "counts keys are "
+#		echo "${!counts[@]}"
+#		echo "counts values are"
+#		echo "${counts[@]}"
+	done
+
+	# decode counts with map to create result
+	result=""
+	for key in "${map[@]}"; do
+		quantity="${counts[$key]}"
+		char="${key##*:}"
+		result="$result$quantity$char"
+	done
+#	echo "$result"
+	echo "Finished $i cycles"
+done
+echo "$result"
+
+
