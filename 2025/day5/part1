@@ -1,0 +1,32 @@
+#!/bin/bash
+
+input=$(cat)
+
+first_half=$(echo "$input" | sed -n '1,/^$/p' | sed '$d')
+second_half=$(echo "$input" | sed -n '/^$/,$p' | tail -n +2)
+
+mapfile -t ranges <<< "$first_half"
+mapfile -t ids <<< "$second_half"
+
+is_in_range() {
+	id="$1"
+
+	for range in "${ranges[@]}"; do
+		start="${range%-*}"
+		end="${range#*-}"
+		if (( id >= start && id <= end )); then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+accum=0
+for id in "${ids[@]}"; do
+	if is_in_range $id; then
+		((accum++))
+	fi
+done
+
+echo "Total number of fresh ingredients is $accum"
