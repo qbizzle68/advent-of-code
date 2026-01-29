@@ -1,0 +1,6 @@
+House 2 got 30 presents.
+House 4 got 70 presents.
+House 8 got 150 presents.
+House 12 got 280 presents.
+House 24 got 600 presents.
+House 48 got 1240 presents.
